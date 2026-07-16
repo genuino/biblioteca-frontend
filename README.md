@@ -21,8 +21,8 @@ Sistema de gerenciamento de biblioteca, com frontend em React/TypeScript (Materi
 Este template fornece uma configuração mínima para fazer o React funcionar no Vite com HMR (Hot Module Replacement) e algumas regras de ESLint.
 Atualmente, dois plugins oficiais estão disponíveis:
 
-[@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react)  usa [Babel](https://babeljs.io/)  (ou [oxc](https://oxc.rs)  quando usado no [rolldown-vite](https://vite.dev/guide/rolldown)) para o Fast Refresh
-[@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) usa [SWC](https://swc.rs/) para o Fast Refresh
+[@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react)  usa [Babel](https://babeljs.io/)  (ou [oxc](https://oxc.rs)  quando usado no [rolldown-vite](https://vite.dev/guide/rolldown)) para o Fast Refresh 
+[@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) usa [SWC](https://swc.rs/) para o Fast Refresh React
 
 ### React Compiler
 
