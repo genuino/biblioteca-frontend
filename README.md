@@ -33,8 +33,7 @@ Nota: isso vai impactar o desempenho de desenvolvimento e build do Vite.
 
 Caso tenha necessidade faça as alterações abaixo.
 
-Expandindo a configuração do ESLint
-Se você está desenvolvendo uma aplicação em produção, recomendamos atualizar a configuração para habilitar regras de lint que levam em conta os tipos:
+Expandindo a configuração do ESLint se você está desenvolvendo uma aplicação em produção, recomendamos atualizar a configuração para habilitar regras de lint que levam em conta os tipos:
 
 ```js
 export default defineConfig([
@@ -91,6 +90,7 @@ export default defineConfig([
   },
 ])
 ```
+
 ## Como executar
 
 ### 1. Executar o frontend
