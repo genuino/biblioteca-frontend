@@ -106,7 +106,7 @@ O frontend estará disponível em `http://localhost:5173` (ou na porta indicada 
 
 ### 3. Backend 
 
-Link: (https://github.com/genuino/biblioteca-backend)
+Link: https://github.com/genuino/biblioteca-backend
 
 ## Estrutura do projeto
 
