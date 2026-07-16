@@ -1,3 +1,52 @@
+# Biblioteca
+
+Sistema de gerenciamento de biblioteca, com frontend em React/TypeScript (Material UI) e backend em Java Spring Boot (JPA/Hibernate + PostgreSQL).
+
+## Tecnologias
+
+- **Frontend:** React, TypeScript, Material UI
+- **Backend:** Java, Spring Boot, JPA/Hibernate
+- **Banco de dados:** PostgreSQL
+- **Build/Execução do backend:** Maven
+
+## Pré-requisitos
+
+- [Docker](https://www.docker.com/) instalado e em execução (necessário para subir o banco de dados PostgreSQL)
+- [Java JDK](https://adoptium.net/) (17 ou superior)
+- [Maven](https://maven.apache.org/) instalado (ou utilize o Maven Wrapper `./mvnw` incluído no projeto, se disponível)
+- [Node.js](https://nodejs.org/) e npm/yarn (para rodar o frontend)
+
+## Como executar
+
+### 1. Executar o frontend
+
+Dentro da pasta do frontend, execute:
+
+```bash
+npm install
+npm run dev
+```
+
+O frontend estará disponível em `http://localhost:5173` (ou na porta indicada no terminal, caso esteja usando Vite).
+
+
+### 3. Backend 
+
+Link: 
+
+## Estrutura do projeto
+
+```
+biblioteca/
+├── backend/       # API Spring Boot
+├── frontend/       # Aplicação React
+└── docker-compose.yml
+```
+
+## Licença
+
+Este projeto está sob a licença [MIT](LICENSE).
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
