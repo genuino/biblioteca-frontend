@@ -32,6 +32,7 @@ import MenuItem from '@mui/material/MenuItem';
 import IconButton from '@mui/material/IconButton';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { Aluno, Livro, Configuracao } from '../Objetos_Rest';
+import { aplicarMascara } from '../utils/Util';
 
 // ─── Interfaces ───────────────────────────────────────────────────────────────
 
@@ -385,20 +386,47 @@ export default function BlogTableView() {
     setLivros([]);
   };
 
-  // Métodos do menu da tabela
-  const devolverTudo = async () => {
-    
-    const ids = emprestimos.map(e => e.id);
-    await axios.patch(`${API_BASE_URL}/venda/devolver-tudo`, { ids });
-    carregarEmprestimosPorCampos(true);
-  
-  };
+  const renovarEmprestimo = async (emprestimoId: number) => {
 
-  const renovarTudo = async () => {
-    
-    const ids = emprestimos.map(e => e.id);
-    await axios.patch(`${API_BASE_URL}/venda/renovar-tudo`, { ids });
-    carregarEmprestimosPorCampos(true);
+    let msg = '';
+    setLoading(true);
+    try {
+      
+      const response = await axios.patch(`${API_BASE_URL}/venda/renovar/${emprestimoId}`);
+            
+      // sucesso — Spring Boot retorna String simples
+      msg = response.data;
+      setTipoMensagem('success');
+      
+    } catch (error) {
+
+      if (axios.isAxiosError(error)) {
+        setTipoMensagem('error');
+
+        //alert('Erro: ' + responseText);
+
+        // tenta extrair mensagem do JSON, senão usa o texto direto
+        try {
+
+          const errorData = JSON.parse(error.response?.data);
+          msg = errorData.message;
+          
+        } catch {
+          
+          msg = error.response?.data;
+          
+        }
+      }
+    } finally {
+      
+      // sucesso — Spring Boot retorna String simples
+      setMensagem(msg);
+      setOpenSnackbar(true);
+      handleLimpar();
+      await carregarEmprestimos();
+      
+      setLoading(false);
+    }
     
   };
 
@@ -476,11 +504,14 @@ export default function BlogTableView() {
                     />
                   ))
                 }
-                renderOption={(props, option) => (
+                renderOption={(props, option) => {
+                  //alert('imagens do livro:' + option.titulo + ' ' + (option.imagens?.[0] ?? 'livro_avatar.svg'));
+
+                  return (
                   <li {...props} key={option.id}>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                       <Avatar
-                        src={`${API_BASE_URL_IMAGEM}/${option.imagem}`}
+                        src={`${API_BASE_URL_IMAGEM}/${option.imagens?.[0].imagem ?? 'livro_avatar.svg'}`}
                         alt={option.titulo}
                         variant="rounded"
                         sx={{ width: 36, height: 50 }}
@@ -495,7 +526,7 @@ export default function BlogTableView() {
                       </Box>
                     </Box>
                   </li>
-                )}
+                )}}
                 renderInput={(params) => (
                   <TextField
                     {...params}
@@ -549,12 +580,12 @@ export default function BlogTableView() {
             <Table sx={{ minWidth: 650 }} aria-label="tabela de empréstimos">
               <TableHead>
                 <TableRow sx={{ backgroundColor: 'primary.main' }}>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 110 }}>Capa</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 110 }}></TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 130 }}>Categoria</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 130 }}>Título</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>Descrição</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 160 }}>Autores</TableCell>
-                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 80 }}>Cópias</TableCell>
+                  <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 80 }}>Data</TableCell>
                   <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 100 }}>Aluno</TableCell>
 
 
@@ -568,18 +599,7 @@ export default function BlogTableView() {
                         <MoreVertIcon />
                       </IconButton>
 
-                      <Menu
-                        anchorEl={anchorEl}
-                        open={openMenu}
-                        onClose={() => setAnchorEl(null)}
-                      >
-                        <MenuItem onClick={() => { devolverTudo(); setAnchorEl(null); }}>
-                          Devolver tudo
-                        </MenuItem>
-                        <MenuItem onClick={() => { renovarTudo(); setAnchorEl(null); }}>
-                          Renovar tudo
-                        </MenuItem>
-                      </Menu>
+                      
                     </TableCell>
                   )}
 
@@ -608,7 +628,7 @@ export default function BlogTableView() {
                         {/* Capa */}
                         <TableCell>
                           <Avatar
-                            src={`${API_BASE_URL_IMAGEM}/${livro.imagem}`}
+                            src={`${API_BASE_URL_IMAGEM}/${livro.imagens?.[0].imagem ?? 'livro_avatar.svg'}`}
                             alt={livro.titulo}
                             variant="rounded"
                             sx={{ width: 48, height: 64 }}
@@ -677,7 +697,7 @@ export default function BlogTableView() {
                         {/* Cópias */}
                         <TableCell>
                           <Typography variant="body2" align="center">
-                            {livro.copia}
+                            {aplicarMascara(emprestimo.data)}
                           </Typography>
                         </TableCell>
 
@@ -699,9 +719,23 @@ export default function BlogTableView() {
                             disabled={loading}
                             sx={{ backgroundColor: '#E65100', 
                               color: 'white',
+                              width: 120,
                               '&:hover': { backgroundColor: '#BF360C' } }}
                           >
                             {loading ? 'Devolvendo…' : 'Devolver'}
+                          </Button>
+                          <Button
+                            variant="outlined"
+                            onClick={() => renovarEmprestimo(emprestimo.id ?? -1)}
+                            size="small"
+                            disabled={loading}
+                            sx={{ backgroundColor: '#808080', 
+                              color: 'white',
+                              width: 120,
+                              marginTop: '1vw',
+                              '&:hover': { backgroundColor: '#808080' } }}
+                          >
+                            {loading ? 'Renovando…' : 'Renovar'}
                           </Button>      
                         </TableCell>
 

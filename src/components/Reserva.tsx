@@ -18,10 +18,15 @@ import Avatar from '@mui/material/Avatar';
 import AvatarGroup from '@mui/material/AvatarGroup';
 import { API_BASE_URL, API_BASE_URL_IMAGEM, APP_TIPO_CONF_RESERVA } from '../Constantes';
 import Button from '@mui/material/Button';
-import { eBissexto, aplicarMascara } from '../utils/Util';
+import { eBissexto, formatarDataBR, aplicarMascara } from '../utils/Util';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
 import type { Livro, Configuracao} from '../Objetos_Rest';
+import { useRef } from 'react';
+import Dialog from '@mui/material/Dialog';
+import DialogTitle from '@mui/material/DialogTitle';
+import DialogContent from '@mui/material/DialogContent';
+import DialogActions from '@mui/material/DialogActions';
 
 const alunosData = [
   {
@@ -82,6 +87,11 @@ export default function Reserva() {
     const [tipoMensagem, setTipoMensagem] = React.useState<'success' | 'error'>('success');
     const [openSnackbar, setOpenSnackbar] = React.useState(false);
     const [loading, setLoading] = React.useState(false);
+    const [idReserva, setIdReserva] = React.useState(-1);
+    // Adicione este estado dentro do componente:
+    const [selectedDesc, setSelectedDesc] = React.useState<{ title: string; description: string } | null>(null);
+
+    const alunoAnterior = useRef(aluno);
 
     // Carregar categorias ao montar o componente												 
     React.useEffect(() => {
@@ -95,10 +105,26 @@ export default function Reserva() {
     }, []);    
     
     // Carregar reservas ao montar o componente												 
-    React.useEffect(() => {
+    React.useEffect(() => {        
+        
+        if (alunoAnterior.current === aluno) {
+            return;
+        }
+        alunoAnterior.current = aluno;
         
         carregarReservaPorCampos();
-    }, [livros, aluno]);    
+    }, [aluno]);    
+    
+    // Carregar reservas ao montar o componente												 
+    React.useEffect(() => {        
+
+        if(livros == null || livros.length == 0) {
+
+            return;
+        }
+        
+        carregarReservaPorCampos();
+    }, [livros]);    
     
     // Carregar categorias do backend
     const carregarConfiguracao = async () => {
@@ -125,6 +151,8 @@ export default function Reserva() {
     // Carregar categorias do backend
     const carregarReservaPorCampos = async () => {
         
+        console.debug('Entrou no carregarReservaPorCampos');
+
         setLoading(false);
         let idAlunoAux = -1;
 
@@ -133,7 +161,12 @@ export default function Reserva() {
             idAlunoAux = aluno.id;
         }
 
-        const ids: number[] = livros.map(livro => livro.id);
+        let ids: number[] = [];
+
+        if(livros != null && livros.length > 0) {
+            ids = livros.map(livro => livro.id);
+        }
+        
         const nomes: number[] = [idAlunoAux];
 
         try {
@@ -178,9 +211,14 @@ export default function Reserva() {
     const carregarReserva = async () => {
         
         try {
+            
             const response = await fetch(`${API_BASE_URL}/reserva/pesquisar_reserva/${paginacaoReserva}`);
+            
+            console.debug(response.ok);
+
             if (response.ok) {
                 const data = await response.json();
+                console.debug(data);
                 setReservas(data);
             } else {
                 throw new Error('Erro ao carregar reservas');
@@ -243,9 +281,9 @@ export default function Reserva() {
         tipo: 'inicial' | 'final'
     ) => {
         
-        let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
+        //let value = e.target.value.replace(/\D/g, ''); // Remove tudo que não é dígito
         
-        value = aplicarMascara(value);
+        let value = formatarDataBR(e.target.value);
 
         // Converte para formato ISO antes de salvar no estado
         let dataISO = '';
@@ -339,7 +377,7 @@ export default function Reserva() {
     const handleSubmit = async (e: React.FormEvent) => {
         
         e.preventDefault();
-
+        
         if (aluno == null || !aluno.id || livros.length == 0 || !dataInicial) {
           
           setMensagem('Por favor, preencha os campos obrigatórios!');
@@ -347,13 +385,15 @@ export default function Reserva() {
           setOpenSnackbar(true);
           return;
         }
-    
+        
         try {
-    
+
           const reservaFormatado = {
             ...formatarReservaParaBackend()
           };
     
+          console.log('JSON ENVIADO: ' + JSON.stringify(reservaFormatado));
+
           // Chamada ao backend
           const response = await fetch(`${API_BASE_URL}/reserva`, {  // Ajuste a porta
             method: 'POST',
@@ -364,8 +404,11 @@ export default function Reserva() {
           });
     
         let errorMessage = 'Erro ao cadastrar reserva';
+        setTipoMensagem('success'); 
         if (!response.ok) {
           
+            setTipoMensagem('error');
+
             try {
             const errorData = await response.json();
             errorMessage = errorData.message || errorMessage;
@@ -374,7 +417,7 @@ export default function Reserva() {
             errorMessage = errorText || errorMessage;
           }
           throw new Error(errorMessage);
-        }
+        } 
     
         // Tenta ler a resposta - pode ser JSON ou texto
         let data: any = {};
@@ -384,6 +427,7 @@ export default function Reserva() {
           // Resposta é JSON
           data = await response.json();
         } else {
+
           // Resposta é texto puro
           errorMessage = await response.text();
           console.log('Resposta do backend (texto):', errorMessage);
@@ -392,13 +436,15 @@ export default function Reserva() {
         // Esperado: { id: 1, titulo: '...', qrCodeUrl: 'https://...' }
         
         setMensagem(errorMessage);
-        setTipoMensagem('success');
         setOpenSnackbar(true);
 
-        console.log('Reserva cadastrada:', data);
+        if(tipoMensagem === 'success') {
+            console.log('Reserva cadastrada:', data);
                 
-        handleLimpar();
-    
+            handleLimpar();
+            carregarReserva();
+        }
+
       } catch (error: any) {
         console.error('Erro ao cadastrar livro:', error);
         setMensagem(error.message || 'Erro ao cadastrar livro. Tente novamente.');
@@ -410,9 +456,10 @@ export default function Reserva() {
   const formatarReservaParaBackend = () => {
     return {
       
+        id: idReserva,
         copia: 1,
-        dataInicial: dataInicial,
-        dataFinal: dataFinal,
+        dataInicial: dataInicialDisplay,
+        dataFinal: dataFinalDisplay,
         livros: livros,
         idAluno: aluno?.id 
         
@@ -429,7 +476,67 @@ export default function Reserva() {
     setDataFinalDisplay('');
     //setAluno(alunosData[0]);
   };
+    
+  const renovarReserva = async (id: Number) => {
+         
+    try {
+        setLoading(true);
 
+        const response = await axios.patch(`${API_BASE_URL}/reserva/renovar/${id}`);
+        
+        setMensagem(response.data); 
+        setTipoMensagem('success');        
+
+        carregarReserva();
+
+    } catch (error) {
+
+        console.error('Erro ao carregar reserva:', error);
+        const mensagemErro = axios.isAxiosError(error)
+            ? error.response?.data?.message ?? error.message
+            : 'Erro ao renovar reserva';
+        setMensagem(mensagemErro);
+        setTipoMensagem('error');
+        
+    // Fallback para categorias locais se necessário
+    } finally {
+        
+        setLoading(false);
+        setOpenSnackbar(true);
+    }
+
+  };
+    
+  const excluirReserva = async (id: Number) => {
+                
+        try {
+
+            // Chamada ao backend
+            const response = await fetch(`${API_BASE_URL}/reserva/${id}`, {
+              method: 'DELETE',
+            });
+
+            setMensagem(await response.text());
+            setTipoMensagem('success'); 
+            if (!response.ok) {
+          
+                setTipoMensagem('error');
+          
+            } else {
+
+                carregarReserva();
+            }  
+    
+            setOpenSnackbar(true);
+
+        } catch (error: any) {
+            console.error('Erro ao excluir reserva:', error);
+            setMensagem(error.message || 'Erro ao excluir renovação. Tente novamente.');
+            setTipoMensagem('error');
+            setOpenSnackbar(true);
+        }
+    };
+    
     return (
 
         <Box sx={{ maxWidth: 1400, mx: 'auto', p: 3 }}>
@@ -522,7 +629,7 @@ export default function Reserva() {
                                         <li {...props}>
                                             <Box sx={{ display: 'flex', flexDirection: 'row', alignItems: 'center', gap: 1 }}>
                                                 <Avatar
-                                                    src={`${API_BASE_URL_IMAGEM}/${option.imagem}`}  // ou option.imagem, option.urlCapa — depende do seu LivroTable
+                                                    src={`${API_BASE_URL_IMAGEM}/${option.imagens != null && option.imagens.length > 0 ? (option.imagens[0].imagem ?? 'livro_avatar.svg') : 'livro_avatar.svg'}`}  // ou option.imagem, option.urlCapa — depende do seu LivroTable
                                                     alt={option.titulo}
                                                     variant="rounded"
                                                     sx={{ width: 40, height: 56 }}  // proporção de livro
@@ -601,7 +708,7 @@ export default function Reserva() {
                                     <TableHead>
                                         <TableRow sx={{ backgroundColor: 'primary.main' }}>
                                         <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 120 }}>
-                                            Imagem
+                                            
                                         </TableCell>
                                         <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 100 }}>
                                             Categoria
@@ -612,11 +719,11 @@ export default function Reserva() {
                                         <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
                                             Descrição
                                         </TableCell>
-                                        <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 150 }}>
-                                            Autores
+                                        <TableCell sx={{ color: 'white', fontWeight: 'bold' }}>
+                                            Aluno
                                         </TableCell>
                                         <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 150 }}>
-                                            Datas
+                                            Autores
                                         </TableCell>
                                         <TableCell sx={{ color: 'white', fontWeight: 'bold', width: 150 }}>
                                             Período
@@ -634,34 +741,30 @@ export default function Reserva() {
                                                 }}
                                             >
                                                 <TableCell>
-                                                    {
-                                                        <img
-                                                            src={article_2.imagem ?? ''}
-                                                            alt={article_2.titulo}
-                                                            style={{
-                                                                width: 100,
-                                                                height: 60,
-                                                                objectFit: 'cover',
-                                                                borderRadius: 4,
-                                                            }}                                                        
-                                                        />
-                                                    }
+                                                    
+                                                    <Avatar
+                                                        src={`${API_BASE_URL_IMAGEM}/${article_2.imagens ? (article_2.imagens[0].imagem ?? '') : ''}`}
+                                                        alt={article_2.titulo}
+                                                        variant="rounded"
+                                                        sx={{ width: 48, height: 64 }}                                                        
+                                                    />
+                                                      
                                                 </TableCell>
                                                 
                                                 <TableCell>
-                                                <Chip
-                                                    label={article_2.categoria?.caminhoCategoria}
-                                                    size="small"
-                                                    color={
-                                                        article_2.categoria?.caminhoCategoria?.includes('Engineering')
-                                                            ? 'primary'
-                                                        : article_2.categoria?.caminhoCategoria?.includes('Product')
-                                                            ? 'success'
-                                                        : article_2.categoria?.caminhoCategoria?.includes('Design')
-                                                            ? 'secondary'
-                                                        : 'default'
-                                                    }
-                                                />
+                                                    <Chip
+                                                        label={article_2.categoria?.caminhoCategoria}
+                                                        size="small"
+                                                        color={
+                                                            article_2.categoria?.caminhoCategoria?.includes('Engineering')
+                                                                ? 'primary'
+                                                            : article_2.categoria?.caminhoCategoria?.includes('Product')
+                                                                ? 'success'
+                                                            : article_2.categoria?.caminhoCategoria?.includes('Design')
+                                                                ? 'secondary'
+                                                            : 'default'
+                                                        }
+                                                    />
                                                 </TableCell>
                                                 
                                                 <TableCell>
@@ -671,11 +774,32 @@ export default function Reserva() {
                                                 </TableCell>
                                                 
                                                 <TableCell>
-                                                    <Typography variant="body2" color="text.secondary">
+                                                    <Typography variant="body2" color="text.secondary"
+                                                        sx={{
+                                                        overflow: 'hidden',
+                                                        display: '-webkit-box',
+                                                        WebkitLineClamp: 3,
+                                                        WebkitBoxOrient: 'vertical',
+                                                    }}>
                                                         {article_2.descricao}
                                                     </Typography>
+                                                    <Button
+                                                        size="small"
+                                                        onClick={() => setSelectedDesc({ title: article_2.titulo, description: article_2.descricao })}
+                                                        sx={{ mt: 0.5, p: 0, minWidth: 0, textTransform: 'none', fontSize: '0.75rem' }}
+                                                    >
+                                                        Leia mais
+                                                    </Button>
                                                 </TableCell>
-                                                
+                                                                 
+                                                <TableCell>
+                                                    <Chip
+                                                        label={alunosData.find(a => (a.id ?? -1) === article.idAluno)?.nome ?? article.idAluno}
+                                                        size="small"
+                                                        variant="outlined"
+                                                    />                
+                                                </TableCell>
+                               
                                                 <TableCell>
                                                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                                                         <AvatarGroup max={2}>
@@ -691,7 +815,36 @@ export default function Reserva() {
                                                     </Box>
                                                 </TableCell>
                                                 <TableCell>
-                                                    {article.dataInicial} {article.dataFinal ? article.dataFinal : ' - ' + article.dataFinal}
+                                                    <Typography variant="caption" sx={{ display: { xs: 'none', md: 'block' } }}>
+                                                        {article.dataInicial} {article.dataFinal ? ' - ' + article.dataFinal : ''}
+                                                    </Typography>
+                                                </TableCell>
+                                                <TableCell>
+                                                    <Button
+                                                        variant="outlined"
+                                                        onClick={() => renovarReserva(article.id ?? -1)}
+                                                        size="small"
+                                                        disabled={loading}
+                                                        sx={{ backgroundColor: '#E65100', 
+                                                        color: 'white',
+                                                        width: 120,
+                                                        '&:hover': { backgroundColor: '#BF360C' } }}
+                                                    >
+                                                        {loading ? 'Renovando…' : 'Renovar'}
+                                                    </Button>
+                                                    <Button
+                                                        variant="outlined"
+                                                        onClick={() => excluirReserva(article.id ?? -1)}
+                                                        size="small"
+                                                        disabled={loading}
+                                                        sx={{ backgroundColor: '#880808', 
+                                                        color: 'white',
+                                                        width: 120,
+                                                        marginTop: '1vw',
+                                                        '&:hover': { backgroundColor: '#808080' } }}
+                                                    >
+                                                        {loading ? 'Excluindo…' : 'Excluir'}
+                                                    </Button>      
                                                 </TableCell>
                                             </TableRow>
                                         ))))}
@@ -704,6 +857,20 @@ export default function Reserva() {
                     </Grid>
                 </form>
             </Paper>
+            <Dialog
+                open={!!selectedDesc}
+                onClose={() => setSelectedDesc(null)}
+                maxWidth="sm"
+                fullWidth
+            >
+            <DialogTitle>{selectedDesc?.title}</DialogTitle>
+                <DialogContent dividers>
+                <Typography variant="body1">{selectedDesc?.description}</Typography>
+                </DialogContent>
+                <DialogActions>
+                <Button onClick={() => setSelectedDesc(null)}>Fechar</Button>
+                </DialogActions>
+            </Dialog>
 
             <Snackbar
                 open={openSnackbar}

@@ -39,7 +39,7 @@ import Chip from '@mui/material/Chip';
 import CircularProgress from '@mui/material/CircularProgress';
 import RefreshIcon from '@mui/icons-material/Refresh';									  
 import { APP_TIPO_CONF, API_BASE_URL } from '../Constantes';
-import type { Livro, Categoria, Autor } from '../Objetos_Rest';
+import type { Livro, Categoria, Autor, ImagemLivro } from '../Objetos_Rest';
 
 function CategoriaTreeItem({ 
   categoria, 
@@ -216,7 +216,7 @@ export default function CadastroLivro() {
     copia: 0,
     localizacao: '',
     descricao: '',
-    imagem: null,
+    imagens: [],
   });
 
   const [categorias, setCategorias] = React.useState<Categoria[]>([]);
@@ -583,41 +583,92 @@ export default function CadastroLivro() {
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
+    
+    if(livro.imagens != null && livro.imagens.length >= 5) {
+      
+      setMensagem('Limite de imagens atingido. É permitido 5 imagens para o livro!');
+      setTipoMensagem('error');
+      setOpenSnackbar(true);
+      return;  
+    }
+
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+  
+    const arquivosValidos: File[] = [];
+
+    for (const file of Array.from(files)) {
       if (!file.type.startsWith('image/')) {
         setMensagem('Por favor, selecione apenas arquivos de imagem!');
         setTipoMensagem('error');
         setOpenSnackbar(true);
-        return;
+        continue;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        setMensagem('A imagem deve ter no máximo 5MB!');
+        setMensagem(`A imagem "${file.name}" deve ter no máximo 5MB!`);
         setTipoMensagem('error');
         setOpenSnackbar(true);
-        return;
+        continue;
       }
 
+      arquivosValidos.push(file);
+    }
+
+    if (arquivosValidos.length === 0) {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
+      return;
+    }
+
+    let carregadas = 0;
+    let imagemLivro : ImagemLivro = { 
+      imagem: '', 
+      posicao: carregadas,
+    }
+    const novasImagens: ImagemLivro[] = [];
+
+    arquivosValidos.forEach((file) => {
       const reader = new FileReader();
       reader.onloadend = () => {
-        setLivro(prev => ({
-          ...prev,
-          imagem: reader.result as string,
-        }));
-        setMensagem('Imagem carregada com sucesso!');
-        setTipoMensagem('success');
-        setOpenSnackbar(true);
+
+        imagemLivro = { 
+          imagem: reader.result as string, 
+          posicao: carregadas
+        }
+        novasImagens.push(imagemLivro);
+        carregadas += 1;
+
+        if (carregadas === arquivosValidos.length) {
+          setLivro(prev => ({
+            ...prev,
+            imagens: [...prev.imagens ?? [], ...novasImagens],
+          }));
+          setMensagem(
+            arquivosValidos.length > 1
+              ? 'Imagens carregadas com sucesso!'
+              : 'Imagem carregada com sucesso!'
+          );
+          setTipoMensagem('success');
+          setOpenSnackbar(true);
+        }
       };
       reader.readAsDataURL(file);
+    });
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
+  
   };
 
-  const handleRemoveImage = () => {
+  const handleRemoveImage = (index: number) => {
     setLivro(prev => ({
       ...prev,
-      imagem: null,
+      imagem: prev.imagens != null ? prev.imagens.filter((_, i) => i !== index) : [],
     }));
+
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -761,7 +812,9 @@ export default function CadastroLivro() {
         autores: autoresFinais // Usa a lista retornada, não o estado
       };
 
-      //alert(livroFormatado.id);
+      alert(livroFormatado.imagens?.length);
+      alert(livroFormatado.isbn);
+      alert(livroFormatado.publicacao);
 
       // Chamada ao backend
       const response = await fetch(`${API_BASE_URL}/livro?comRestricao=true`, {  // Ajuste a porta
@@ -771,6 +824,8 @@ export default function CadastroLivro() {
         },
         body: JSON.stringify(livroFormatado),
       });
+
+      console.log('JSON ENVIADO:' + JSON.stringify(livroFormatado));
 
     if (!response.ok) {
       // Tenta ler como JSON, se falhar, lê como texto
@@ -853,10 +908,14 @@ export default function CadastroLivro() {
       copia: 0,
       localizacao: '',
       descricao: '',
-      imagem: null,
+      imagens: null,
     });
+
+    setInputAutor('');
+
     setCategoriaSelecionada(-1);
     setCategoriaNome('');
+    
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
@@ -882,7 +941,7 @@ export default function CadastroLivro() {
     })),
       valor: 0.0,  // Você pode adicionar campo de valor no formulário
       copia: livroForm.copia || 1,
-      imagem: livroForm.imagem
+      imagens: livroForm.imagens
     };
   };
 
@@ -1084,37 +1143,71 @@ export default function CadastroLivro() {
             <Grid item xs={12} md={3}>
               <Box sx={{ position: 'sticky', top: 20 }}>
                 <Typography variant="subtitle1" gutterBottom fontWeight="bold">
-                  Capa do Livro
+                  Capa(s) do Livro
                 </Typography>
-                
-                {livro.imagem ? (
-                  <Box sx={{ position: 'relative' }}>
-                    <Card elevation={2}>
-                      <CardMedia
-                        component="img"
-                        image={livro.imagem}
-                        alt="Capa do livro"
+
+                {(livro.imagens?.length ?? 0) > 0 ? (
+                  <Grid container spacing={1}>
+                    {livro.imagens?.map((img, index) => (
+                      <Grid item xs={6} key={index}>
+                        <Box sx={{ position: 'relative' }}>
+                          <Card elevation={2}>
+                            <CardMedia
+                              component="img"
+                              image={img.imagem}
+                              alt={`Capa do livro ${index + 1}`}
+                              sx={{
+                                height: 190,
+                                objectFit: 'contain',
+                                backgroundColor: 'grey.100',
+                              }}
+                            />
+                          </Card>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleRemoveImage(index)}
+                            color="error"
+                            sx={{
+                              position: 'absolute',
+                              top: 4,
+                              right: 4,
+                              backgroundColor: 'white',
+                              '&:hover': { backgroundColor: 'grey.100' },
+                            }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Grid>
+                    ))}
+                    <Grid item xs={6}>
+                      <Box
                         sx={{
-                          height: 400,
-                          objectFit: 'contain',
-                          backgroundColor: 'grey.100',
+                          height: 190,
+                          border: '2px dashed',
+                          borderColor: 'grey.400',
+                          borderRadius: 2,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: 'grey.50',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s',
+                          '&:hover': {
+                            borderColor: 'primary.main',
+                            backgroundColor: 'grey.100',
+                          },
                         }}
-                      />
-                    </Card>
-                    <IconButton
-                      onClick={handleRemoveImage}
-                      color="error"
-                      sx={{
-                        position: 'absolute',
-                        top: 8,
-                        right: 8,
-                        backgroundColor: 'white',
-                        '&:hover': { backgroundColor: 'grey.100' },
-                      }}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </Box>
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <CloudUploadIcon sx={{ fontSize: 32, color: 'grey.400', mb: 1 }} />
+                        <Typography variant="caption" color="text.secondary" align="center">
+                          Adicionar mais
+                        </Typography>
+                      </Box>
+                    </Grid>
+                  </Grid>
                 ) : (
                   <Box
                     sx={{
@@ -1138,10 +1231,10 @@ export default function CadastroLivro() {
                   >
                     <CloudUploadIcon sx={{ fontSize: 60, color: 'grey.400', mb: 2 }} />
                     <Typography variant="body1" color="text.secondary" align="center">
-                      Clique para adicionar a capa
+                      Clique para adicionar capas
                     </Typography>
                     <Typography variant="caption" color="text.secondary" align="center" sx={{ mt: 1 }}>
-                      JPG, PNG ou GIF (máx. 5MB)
+                      JPG, PNG ou GIF (máx. 5MB cada)
                     </Typography>
                   </Box>
                 )}
@@ -1150,11 +1243,12 @@ export default function CadastroLivro() {
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  multiple
                   onChange={handleImageUpload}
                   style={{ display: 'none' }}
                 />
 
-                {!livro.imagem && (
+                {livro.imagens?.length === 0 && (
                   <Button
                     variant="outlined"
                     fullWidth
@@ -1162,11 +1256,12 @@ export default function CadastroLivro() {
                     onClick={() => fileInputRef.current?.click()}
                     sx={{ mt: 2 }}
                   >
-                    Selecionar Imagem
+                    Selecionar Imagens
                   </Button>
                 )}
               </Box>
             </Grid>
+
 
             {/* Coluna dos Campos */}
             <Grid item xs={12} md={6}>

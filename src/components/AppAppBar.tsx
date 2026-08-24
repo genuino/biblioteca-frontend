@@ -71,19 +71,7 @@ export default function AppAppBar() {
               >
                 Livros
               </Button>
-              <Button
-                variant="text"
-                color="info"
-                size="small"
-                onClick={() => navigate('/alunos')}
-                sx={{
-                  minWidth: 0,
-                  fontWeight: isActive('/alunos') ? 'bold' : 'normal',
-                  textDecoration: isActive('/alunos') ? 'underline' : 'none',
-                }}
-              >
-                Alunos
-              </Button>
+              
               <Button
                 variant="text"
                 color="info"

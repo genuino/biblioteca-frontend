@@ -8,6 +8,8 @@ import LivrosPage from './pages/LivrosPage';
 import ReservaPage from './pages/ReservaPage';
 import ConfiguracaoPage from './pages/ConfiguracaoPage';
 
+/*<Route path="alunos" element={<div style={{ padding: '2rem' }}>Página de Alunos - Em construção</div>} />*/
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <StyledEngineProvider injectFirst>
@@ -16,7 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Blog />}>
             <Route index element={<HomePage />} />
             <Route path="livros" element={<LivrosPage />} />
-            <Route path="alunos" element={<div style={{ padding: '2rem' }}>Página de Alunos - Em construção</div>} />
+            
             <Route path="reservas" element={<ReservaPage/>} />
             <Route path="configuracao" element={<ConfiguracaoPage/>} />
           </Route>

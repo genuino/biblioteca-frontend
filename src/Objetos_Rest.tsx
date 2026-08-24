@@ -25,7 +25,7 @@ export interface Livro {
   titulo: string;
   editora: string;
   edicao: string;
-  imagem: string | null;
+  imagens: ImagemLivro[] | null;
   descricao: string;
   categoria: Categoria | null;
   copia: number;
@@ -34,6 +34,11 @@ export interface Livro {
   publicacao?: string;
   _publicacaoDisplay?: string;
   localizacao?: string;
+}
+
+export interface ImagemLivro {
+  imagem: string;
+  posicao: number;
 }
 
 export interface Configuracao {
@@ -47,6 +52,5 @@ export interface Configuracao {
     qtosDiasPenalizacao: number,
     qtasInfracoesPenalizacao: number,
     valorDiariaMulta: number,
-    periodoPenalizacao: number,
-    cobrarAtraso: boolean
+    periodoPenalizacao: number
 }
