@@ -4,11 +4,11 @@ Sistema de gerenciamento de biblioteca, com frontend em React/TypeScript (Materi
 
 ## Tecnologias
 
-- **Frontend:** React, TypeScript, Material UI
-- **Backend:** Java, Spring Boot, JPA/Hibernate
+- **Frontend:** React, TypeScript, Material UI e REST
+- **Backend:** Java, Spring Boot, JPA/Hibernate, JUnit 5, Mockito e REST
 - **Banco de dados:** PostgreSQL
 - **Build/Execução do backend:** Maven
-
+  
 ## Pré-requisitos
 
 - [Docker](https://www.docker.com/) instalado e em execução (necessário para subir o banco de dados PostgreSQL)
