@@ -1,75 +1,62 @@
-# React + TypeScript + Vite
+# Biblioteca
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Sistema de gerenciamento de biblioteca, com frontend em React/TypeScript (Material UI) e backend em Java Spring Boot (JPA/Hibernate + PostgreSQL).
 
-Currently, two official plugins are available:
+## Tecnologias
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **Frontend:** React, TypeScript, Material UI
+- **Backend:** Java, Spring Boot, JPA/Hibernate
+- **Banco de dados:** PostgreSQL
+- **Build/Execução do backend:** Maven
 
-## React Compiler
+## Pré-requisitos
 
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
+- [Docker](https://www.docker.com/) instalado e em execução (necessário para subir o banco de dados PostgreSQL)
+- [Java JDK](https://adoptium.net/) (21 ou superior)
+- [Maven](https://maven.apache.org/) 
+- [Node.js](https://nodejs.org/) e npm/yarn (para rodar o frontend)
 
-Note: This will impact Vite dev & build performances.
+### React + TypeScript + Vite
 
-## Expanding the ESLint configuration
+Este template fornece uma configuração mínima para fazer o React funcionar no Vite com HMR (Hot Module Replacement) e algumas regras de ESLint.
+Atualmente, dois plugins oficiais estão disponíveis:
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react)  usa [Babel](https://babeljs.io/)  (ou [oxc](https://oxc.rs)  quando usado no [rolldown-vite](https://vite.dev/guide/rolldown)) para o Fast Refresh 
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) usa [SWC](https://swc.rs/) para o Fast Refresh React
 
-```js
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+### React Compiler
 
-      // Remove tseslint.configs.recommended and replace with this
-      tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      tseslint.configs.stylisticTypeChecked,
+O React Compiler está habilitado neste template. [Veja esta documentação](https://react.dev/learn/react-compiler) para mais informações.
+Nota: isso vai impactar o desempenho de desenvolvimento e build do Vite.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+## Como executar
+
+### 1. Executar o frontend
+
+Dentro da pasta do frontend, execute:
+
+```bash
+npm install
+npm run dev
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+O frontend estará disponível em `http://localhost:5173` (ou na porta indicada no terminal, caso esteja usando Vite).
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+### 3. Backend 
 
-export default defineConfig([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+Link: https://github.com/genuino/biblioteca-backend
+
+## Estrutura do projeto
+
 ```
+biblioteca/
+├── backend/       # API Spring Boot
+├── frontend/       # Aplicação React
+└── docker-compose.yml
+```
+
+## Licença
+
+Este projeto está sob a licença [MIT](LICENSE).
+
+
