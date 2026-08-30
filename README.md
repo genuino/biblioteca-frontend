@@ -37,6 +37,7 @@ Dentro da pasta do frontend, execute:
 
 ```bash
 npm install
+npm install eslint-plugin-react-hooks@next --save-dev (Caso acontecer erro no npm install)
 npm run dev
 ```
 
