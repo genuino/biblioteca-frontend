@@ -45,12 +45,12 @@ Bibliotecas podem ser requeridas:
 ```bash
 npm install react-number-format --legacy-peer-deps
 npm install date-fns --legacy-peer-deps
-
+```
 Depois de instaladas as bibliotecas reinicie o servidor:
 
 ```bash
 npm run dev
-
+```
 O frontend estará disponível em `http://localhost:5173` (ou na porta indicada no terminal, caso esteja usando Vite).
 
 ### 3. Backend 
