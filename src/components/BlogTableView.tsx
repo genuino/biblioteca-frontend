@@ -729,11 +729,11 @@ export default function BlogTableView() {
                             onClick={() => renovarEmprestimo(emprestimo.id ?? -1)}
                             size="small"
                             disabled={loading}
-                            sx={{ backgroundColor: '#808080', 
+                            sx={{ backgroundColor: '#3b1442', 
                               color: 'white',
                               width: 120,
                               marginTop: '1vw',
-                              '&:hover': { backgroundColor: '#808080' } }}
+                              '&:hover': { backgroundColor: '#1e0b36' } }}
                           >
                             {loading ? 'Renovando…' : 'Renovar'}
                           </Button>      
