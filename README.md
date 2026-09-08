@@ -53,7 +53,11 @@ npm run dev
 ```
 O frontend estará disponível em `http://localhost:5173` (ou na porta indicada no terminal, caso esteja usando Vite).
 
-### 3. Backend 
+### 3. Configuração 
+
+Preencha os dados e salve na página de Configuração.
+
+### 4. Backend 
 
 Link: https://github.com/genuino/biblioteca-backend/tree/master
 
